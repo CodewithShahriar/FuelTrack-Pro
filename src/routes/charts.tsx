@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
-import { useFillUps, useHydrated, useSelectedVehicle } from "@/lib/storage";
+import { useFillUps, useSelectedVehicle } from "@/lib/storage";
 import { fillUpsForVehicle, withConsumption } from "@/lib/calc";
 import {
   Area,
@@ -22,7 +22,6 @@ export const Route = createFileRoute("/charts")({
 });
 
 function ChartsPage() {
-  const hydrated = useHydrated();
   const { vehicle } = useSelectedVehicle();
   const [fillups] = useFillUps();
   const nav = useNavigate();
@@ -51,7 +50,7 @@ function ChartsPage() {
     return Array.from(m.entries()).map(([k, v]) => ({ month: k.slice(5), ...v }));
   }, [fillups, vehicle]);
 
-  if (!hydrated || !vehicle) return <MobileShell title="Charts" back={() => nav({ to: "/" })}><div /></MobileShell>;
+  if (!vehicle) return <MobileShell title="Charts" back={() => nav({ to: "/" })}><Card>No vehicle selected</Card></MobileShell>;
 
   return (
     <MobileShell title="Charts" back={() => nav({ to: "/" })}>

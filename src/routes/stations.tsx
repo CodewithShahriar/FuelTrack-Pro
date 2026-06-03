@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { MobileShell, Card } from "@/components/MobileShell";
-import { useHydrated, useSelectedVehicle, useStations } from "@/lib/storage";
+import { useSelectedVehicle, useStations } from "@/lib/storage";
 import { fmtMoney } from "@/lib/calc";
 import { MapPin, Star, Search } from "lucide-react";
 import { useState } from "react";
@@ -11,12 +11,11 @@ export const Route = createFileRoute("/stations")({
 });
 
 function StationsPage() {
-  const hydrated = useHydrated();
   const { vehicle } = useSelectedVehicle();
   const [stations, setStations] = useStations();
   const [q, setQ] = useState("");
 
-  if (!hydrated || !vehicle) return <MobileShell title="Stations"><div /></MobileShell>;
+  if (!vehicle) return <MobileShell title="Stations"><Card>No vehicle selected</Card></MobileShell>;
 
   const list = stations
     .filter((s) => s.name.toLowerCase().includes(q.toLowerCase()))

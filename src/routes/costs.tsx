@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
-import { useCosts, useHydrated, useSelectedVehicle } from "@/lib/storage";
+import { useCosts, useSelectedVehicle } from "@/lib/storage";
 import {
   costsForVehicle,
   fmtMoney,
@@ -38,13 +38,12 @@ const TYPES: { key: CostType; label: string; icon: any }[] = [
 ];
 
 function CostsPage() {
-  const hydrated = useHydrated();
   const { vehicle } = useSelectedVehicle();
   const [allCosts, setCosts] = useCosts();
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
 
-  if (!hydrated || !vehicle) return <MobileShell title="Costs"><div /></MobileShell>;
+  if (!vehicle) return <MobileShell title="Costs"><Card>No vehicle selected</Card></MobileShell>;
 
   const list = costsForVehicle(allCosts, vehicle.id);
   const r = ranges();

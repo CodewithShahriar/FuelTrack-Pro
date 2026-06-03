@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { MobileShell, Card, Stat } from "@/components/MobileShell";
+import { MileageValue } from "@/components/MileageValue";
 import { useFillUps, useSelectedVehicle, useStations } from "@/lib/storage";
 import {
   fillUpsForVehicle,
@@ -138,13 +139,11 @@ function Home() {
           <div className="grid grid-cols-3 gap-3">
             <Stat
               label="Avg cons."
-              value={`${fmtNum(avgConsumption, 2)}`}
-              sub={`${vehicle.distanceUnit}/${vehicle.fuelUnit}`}
+              value={<MileageValue value={avgConsumption} />}
             />
             <Stat
               label="Last cons."
-              value={`${fmtNum(last?.consumption ?? null, 2)}`}
-              sub={`${vehicle.distanceUnit}/${vehicle.fuelUnit}`}
+              value={<MileageValue value={last?.consumption ?? null} />}
             />
             <Stat
               label="Last price"
@@ -170,8 +169,10 @@ function Home() {
           <div className="grid grid-cols-2 gap-3">
             <Card>
               <div className="text-xs text-muted-foreground">Consumption</div>
-              <div className="text-xl font-bold mt-1">{fmtNum(avgConsumption, 2)}</div>
-              <div className="text-[11px] text-muted-foreground">avg km/L</div>
+              <div className="mt-1">
+                <MileageValue value={avgConsumption} className="text-xl" />
+              </div>
+              <div className="text-[11px] text-muted-foreground">average</div>
               <Sparkline values={consumptions} />
             </Card>
             <Card>

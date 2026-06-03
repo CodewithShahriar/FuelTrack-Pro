@@ -8,7 +8,7 @@ const KEYS = {
   costs: "ft_costs",
   stations: "ft_stations",
   selectedVehicle: "ft_selected_vehicle",
-  seeded: "ft_seeded_v1",
+  seeded: "ft_seeded_fuelio_2026_05_29",
 };
 
 function readJSON<T>(key: string, fallback: T): T {
@@ -49,6 +49,10 @@ function subscribe(cb: () => void) {
 }
 
 function useLS<T>(key: string, fallback: T) {
+  useEffect(() => {
+    ensureSeed();
+  }, []);
+
   const get = useCallback(() => readJSON<T>(key, fallback), [key]);
   const value = useSyncExternalStore(
     subscribe,

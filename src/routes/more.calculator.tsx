@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
-import { useHydrated, useSelectedVehicle } from "@/lib/storage";
+import { useSelectedVehicle } from "@/lib/storage";
 import { fmtMoney, fmtNum } from "@/lib/calc";
 
 export const Route = createFileRoute("/more/calculator")({
@@ -12,7 +12,6 @@ export const Route = createFileRoute("/more/calculator")({
 type CalcType = "trip" | "distance" | "consumption" | "fuel";
 
 function CalculatorPage() {
-  const hydrated = useHydrated();
   const { vehicle, vehicles, setId } = useSelectedVehicle();
   const nav = useNavigate();
   const [type, setType] = useState<CalcType>("trip");
@@ -21,7 +20,7 @@ function CalculatorPage() {
   const [consumption, setConsumption] = useState("");
   const [result, setResult] = useState<null | { cost?: number; fuel?: number; distance?: number; consumption?: number }>(null);
 
-  if (!hydrated || !vehicle) return <MobileShell title="Calculator" back={() => nav({ to: "/more" })}><div /></MobileShell>;
+  if (!vehicle) return <MobileShell title="Calculator" back={() => nav({ to: "/more" })}><Card>No vehicle selected</Card></MobileShell>;
 
   function calc() {
     const d = parseFloat(distance);

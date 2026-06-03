@@ -1,9 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
+import { MileageValue } from "@/components/MileageValue";
 import {
   useFillUps,
-  useHydrated,
   useSelectedVehicle,
 } from "@/lib/storage";
 import {
@@ -27,7 +28,6 @@ export const Route = createFileRoute("/fillups")({
 });
 
 function FillUpsPage() {
-  const hydrated = useHydrated();
   const { vehicle } = useSelectedVehicle();
   const [all] = useFillUps();
   const [q, setQ] = useState("");
@@ -47,7 +47,7 @@ function FillUpsPage() {
     return filtered;
   }, [all, vehicle, q]);
 
-  if (!hydrated || !vehicle) return <MobileShell title="Fill-ups"><div /></MobileShell>;
+  if (!vehicle) return <MobileShell title="Fill-ups"><Card>No vehicle selected</Card></MobileShell>;
 
   const groups = groupByMonth(computed);
 
@@ -132,7 +132,7 @@ function FillUpsPage() {
                       <Mini label="Dist" value={f.distance ? fmtNum(f.distance, 1) : "—"} />
                       <Mini
                         label="Cons"
-                        value={f.consumption ? fmtNum(f.consumption, 1) : "—"}
+                        value={<MileageValue value={f.consumption} digits={1} />}
                       />
                       <Mini
                         label="₹/km"
@@ -160,7 +160,7 @@ function FillUpsPage() {
   );
 }
 
-function Mini({ label, value }: { label: string; value: string }) {
+function Mini({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div>
       <div className="text-[10px] uppercase text-muted-foreground">{label}</div>

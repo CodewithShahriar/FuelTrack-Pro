@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
+import { MileageValue } from "@/components/MileageValue";
 import {
   useFillUps,
-  useHydrated,
   useSelectedVehicle,
   useStations,
 } from "@/lib/storage";
@@ -15,7 +15,6 @@ export const Route = createFileRoute("/fillups/add")({
 });
 
 function AddFillUpPage() {
-  const hydrated = useHydrated();
   const { vehicle, vehicles, setId } = useSelectedVehicle();
   const [fillups, setFillups] = useFillUps();
   const [stations] = useStations();
@@ -57,7 +56,7 @@ function AddFillUpPage() {
     }
   }, [litres, price, touchedTotal]);
 
-  if (!hydrated || !vehicle) return <MobileShell title="Add fill-up" back={() => nav({ to: "/fillups" })}><div /></MobileShell>;
+  if (!vehicle) return <MobileShell title="Add fill-up" back={() => nav({ to: "/fillups" })}><Card>No vehicle selected</Card></MobileShell>;
 
   const computedOdo =
     mode === "odo" ? parseFloat(odo) : lastOdo + (parseFloat(trip) || 0);
@@ -198,8 +197,9 @@ function AddFillUpPage() {
           </div>
 
           {consumption !== null && (
-            <div className="text-xs text-primary font-medium">
-              Estimated consumption: {consumption.toFixed(2)} {vehicle.distanceUnit}/{vehicle.fuelUnit}
+            <div className="text-xs font-medium">
+              Estimated consumption:{" "}
+              <MileageValue value={consumption} className="text-xs" />
             </div>
           )}
         </Card>

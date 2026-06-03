@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { MobileShell, Card, Stat } from "@/components/MobileShell";
-import { useCosts, useFillUps, useHydrated, useSelectedVehicle } from "@/lib/storage";
+import { MileageValue } from "@/components/MileageValue";
+import { useCosts, useFillUps, useSelectedVehicle } from "@/lib/storage";
 import {
   costsForVehicle,
   fillUpsForVehicle,
@@ -21,7 +22,6 @@ export const Route = createFileRoute("/stats")({
 type Tab = "fillups" | "costs" | "distance";
 
 function StatsPage() {
-  const hydrated = useHydrated();
   const { vehicle } = useSelectedVehicle();
   const [fillups] = useFillUps();
   const [costs] = useCosts();
@@ -31,7 +31,7 @@ function StatsPage() {
   const computed = useMemo(() => vehicle ? withConsumption(fillUpsForVehicle(fillups, vehicle.id)) : [], [fillups, vehicle]);
   const myCosts = useMemo(() => vehicle ? costsForVehicle(costs, vehicle.id) : [], [costs, vehicle]);
 
-  if (!hydrated || !vehicle) return <MobileShell title="Stats" back={() => nav({ to: "/" })}><div /></MobileShell>;
+  if (!vehicle) return <MobileShell title="Stats" back={() => nav({ to: "/" })}><Card>No vehicle selected</Card></MobileShell>;
 
   return (
     <MobileShell
@@ -104,9 +104,16 @@ function FillUpsStats({ computed, vehicle }: any) {
       </Card>
       <Card>
         <div className="grid grid-cols-3 gap-3">
-          <Stat label="Avg cons." value={cons.length ? fmtNum(cons.reduce((a: number, b: number) => a + b, 0) / cons.length, 2) : "—"} sub={`${vehicle.distanceUnit}/${vehicle.fuelUnit}`} />
-          <Stat label="Best cons." value={cons.length ? fmtNum(Math.max(...cons), 2) : "—"} />
-          <Stat label="Worst cons." value={cons.length ? fmtNum(Math.min(...cons), 2) : "—"} />
+          <Stat
+            label="Avg cons."
+            value={
+              <MileageValue
+                value={cons.length ? cons.reduce((a: number, b: number) => a + b, 0) / cons.length : null}
+              />
+            }
+          />
+          <Stat label="Best cons." value={<MileageValue value={cons.length ? Math.max(...cons) : null} />} />
+          <Stat label="Worst cons." value={<MileageValue value={cons.length ? Math.min(...cons) : null} />} />
         </div>
       </Card>
     </div>

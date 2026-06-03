@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
-import { useHydrated, useVehicles, useSelectedVehicleId } from "@/lib/storage";
+import { useVehicles, useSelectedVehicleId } from "@/lib/storage";
 import { Bike, Car, Truck, Plus, Trash2, Check } from "lucide-react";
 import type { Vehicle, VehicleType } from "@/lib/types";
 
@@ -11,14 +11,11 @@ export const Route = createFileRoute("/more/vehicles")({
 });
 
 function VehiclesPage() {
-  const hydrated = useHydrated();
   const [vehicles, setVehicles] = useVehicles();
   const [selectedId, setSelectedId] = useSelectedVehicleId();
   const [editing, setEditing] = useState<Vehicle | null>(null);
   const [open, setOpen] = useState(false);
   const nav = useNavigate();
-
-  if (!hydrated) return <MobileShell title="Vehicles" back={() => nav({ to: "/more" })}><div /></MobileShell>;
 
   function save(v: Vehicle) {
     setVehicles((prev) => {
@@ -102,7 +99,7 @@ function VehicleSheet({
   const [odo, setOdo] = useState(String(initial?.initialOdo ?? 0));
   const [fuelUnit, setFuelUnit] = useState(initial?.fuelUnit ?? "L");
   const [distanceUnit, setDistanceUnit] = useState(initial?.distanceUnit ?? "km");
-  const [currency, setCurrency] = useState(initial?.currency ?? "৳");
+  const [currency, setCurrency] = useState(initial?.currency ?? "BDT ");
 
   const can = name.trim().length > 0;
   return (

@@ -80,7 +80,7 @@ export function fmtMonth(key: string) {
   });
 }
 
-export function fmtMoney(amount: number, currency = "৳") {
+export function fmtMoney(amount: number, currency = "BDT ") {
   return `${currency}${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 }
 

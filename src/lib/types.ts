@@ -7,7 +7,7 @@ export interface Vehicle {
   initialOdo: number;
   fuelUnit: string; // "L"
   distanceUnit: string; // "km"
-  currency: string; // "৳"
+  currency: string; // "BDT "
   fuelType?: string;
 }
 
