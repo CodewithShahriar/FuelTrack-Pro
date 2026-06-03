@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "@tanstack/react-router";
 import { MobileShell, Card, Stat } from "@/components/MobileShell";
-import { useFillUps, useHydrated, useSelectedVehicle, useStations } from "@/lib/storage";
+import { useFillUps, useSelectedVehicle, useStations } from "@/lib/storage";
 import {
   fillUpsForVehicle,
   withConsumption,
@@ -42,7 +42,6 @@ function vehicleIcon(type: string) {
 }
 
 function Home() {
-  const hydrated = useHydrated();
   const { vehicle } = useSelectedVehicle();
   const [allFillUps] = useFillUps();
   const [stations] = useStations();
@@ -52,8 +51,17 @@ function Home() {
     return withConsumption(fillUpsForVehicle(allFillUps, vehicle.id));
   }, [allFillUps, vehicle]);
 
-  if (!hydrated || !vehicle) {
-    return <MobileShell title="FuelTrack"><div className="h-40" /></MobileShell>;
+  if (!vehicle) {
+    return (
+      <MobileShell title="FuelTrack">
+        <Card>
+          <div className="font-semibold">No vehicle selected</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add a vehicle to start tracking fuel, costs, and mileage.
+          </p>
+        </Card>
+      </MobileShell>
+    );
   }
 
   const last = computed[computed.length - 1];

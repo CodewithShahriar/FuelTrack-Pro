@@ -66,12 +66,12 @@ function useLS<T>(key: string, fallback: T) {
   return [value, set] as const;
 }
 
-export const useVehicles = () => useLS<Vehicle[]>(KEYS.vehicles, []);
-export const useFillUps = () => useLS<FillUp[]>(KEYS.fillups, []);
-export const useCosts = () => useLS<CostEntry[]>(KEYS.costs, []);
-export const useStations = () => useLS<Station[]>(KEYS.stations, []);
+export const useVehicles = () => useLS<Vehicle[]>(KEYS.vehicles, seedVehicles);
+export const useFillUps = () => useLS<FillUp[]>(KEYS.fillups, seedFillUps);
+export const useCosts = () => useLS<CostEntry[]>(KEYS.costs, seedCosts);
+export const useStations = () => useLS<Station[]>(KEYS.stations, seedStations);
 export const useSelectedVehicleId = () =>
-  useLS<string>(KEYS.selectedVehicle, "");
+  useLS<string>(KEYS.selectedVehicle, seedVehicles[0]?.id ?? "");
 
 export function useSelectedVehicle() {
   const [vehicles] = useVehicles();
