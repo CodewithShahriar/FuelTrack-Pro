@@ -39,7 +39,7 @@ function CalculatorPage() {
       ? values.reduce((sum, value) => sum + value, 0) / values.length
       : null;
     return {
-      consumption: avg ? avg.toFixed(2) : "",
+      consumption: avg ? avg.toFixed(2) : "35",
       price: last?.pricePerLitre ? String(last.pricePerLitre) : "",
     };
   }, [fillups, vehicle]);
@@ -105,42 +105,50 @@ function CalculatorPage() {
           </select>
         </Card>
 
+        <Card>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">
+            Calculator option
+          </div>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value as CalcType)}
+            className="w-full rounded-xl border border-input bg-card px-3 py-2.5 text-sm font-semibold outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="trip">Trip cost</option>
+            <option value="fuel">Required fuel</option>
+            <option value="distance">Distance from fuel</option>
+            <option value="consumption">Consumption</option>
+          </select>
+        </Card>
+
         <div className="grid grid-cols-2 gap-2">
           <ModeButton
             active={type === "trip"}
             icon={Calculator}
             label="Trip cost"
             sub="Fuel + money"
-            onClick={() => {
-              setType("trip");
-              }}
+            onClick={() => setType("trip")}
           />
           <ModeButton
             active={type === "fuel"}
             icon={Fuel}
             label="Required fuel"
             sub="Litres needed"
-            onClick={() => {
-              setType("fuel");
-              }}
+            onClick={() => setType("fuel")}
           />
           <ModeButton
             active={type === "distance"}
             icon={RouteIcon}
             label="Distance"
             sub="Range from fuel"
-            onClick={() => {
-              setType("distance");
-              }}
+            onClick={() => setType("distance")}
           />
           <ModeButton
             active={type === "consumption"}
             icon={Gauge}
             label="Consumption"
             sub="km per litre"
-            onClick={() => {
-              setType("consumption");
-              }}
+            onClick={() => setType("consumption")}
           />
         </div>
 
@@ -272,6 +280,7 @@ function ModeButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`min-h-[88px] rounded-2xl border p-3 text-left shadow-card transition ${
         active
