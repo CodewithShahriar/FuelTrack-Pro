@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
@@ -28,11 +28,14 @@ export const Route = createFileRoute("/fillups")({
 });
 
 function FillUpsPage() {
+  const loc = useLocation();
   const { vehicle } = useSelectedVehicle();
   const [all] = useFillUps();
   const [q, setQ] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const nav = useNavigate();
+
+  if (loc.pathname !== "/fillups") return <Outlet />;
 
   const computed = useMemo(() => {
     if (!vehicle) return [];

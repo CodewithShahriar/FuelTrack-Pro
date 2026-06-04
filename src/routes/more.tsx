@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { MobileShell, Card } from "@/components/MobileShell";
 import {
   Calculator,
@@ -20,7 +20,10 @@ export const Route = createFileRoute("/more")({
 });
 
 function MorePage() {
+  const loc = useLocation();
   const fileRef = useRef<HTMLInputElement>(null);
+
+  if (loc.pathname !== "/more") return <Outlet />;
 
   function doExport() {
     const blob = new Blob([exportAll()], { type: "application/json" });
