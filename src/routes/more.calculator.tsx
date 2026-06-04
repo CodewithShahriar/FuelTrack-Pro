@@ -11,6 +11,14 @@ export const Route = createFileRoute("/more/calculator")({
 });
 
 type CalcType = "trip" | "distance" | "consumption" | "fuel";
+type CalcResult = {
+  cost?: number;
+  fuel?: number;
+  distance?: number;
+  consumption?: number;
+  costPerKm?: number;
+  rangeCost?: number;
+};
 
 function CalculatorPage() {
   const { vehicle, vehicles, setId } = useSelectedVehicle();
@@ -21,7 +29,6 @@ function CalculatorPage() {
   const [fuelAmount, setFuelAmount] = useState("");
   const [price, setPrice] = useState("");
   const [consumption, setConsumption] = useState("");
-  const [result, setResult] = useState<null | { cost?: number; fuel?: number; distance?: number; consumption?: number }>(null);
 
   const defaults = useMemo(() => {
     if (!vehicle) return { consumption: "", price: "" };
@@ -40,43 +47,53 @@ function CalculatorPage() {
   useEffect(() => {
     setConsumption(defaults.consumption);
     setPrice(defaults.price);
-    setResult(null);
   }, [defaults.consumption, defaults.price, vehicle?.id]);
 
-  function calc() {
-    const d = parseFloat(distance);
-    const fuelInput = parseFloat(fuelAmount);
-    const p = parseFloat(price);
-    const c = parseFloat(consumption);
-    if (type === "trip") {
-      if (d <= 0 || p <= 0 || c <= 0) return setResult(null);
-      const fuel = d / c;
-      setResult({ fuel, cost: fuel * p });
-    } else if (type === "distance") {
-      if (fuelInput <= 0 || c <= 0) return setResult(null);
-      setResult({ distance: fuelInput * c });
-    } else if (type === "consumption") {
-      if (d <= 0 || fuelInput <= 0) return setResult(null);
-      setResult({ consumption: d / fuelInput });
-    } else {
-      if (d <= 0 || c <= 0) return setResult(null);
-      const fuel = d / c;
-      setResult({ fuel, cost: p ? fuel * p : undefined });
-    }
-  }
+  const numbers = useMemo(() => ({
+    distance: positiveNumber(distance),
+    fuel: positiveNumber(fuelAmount),
+    price: positiveNumber(price),
+    consumption: positiveNumber(consumption),
+  }), [distance, fuelAmount, price, consumption]);
 
-  useEffect(() => {
-    calc();
-  }, [distance, fuelAmount, price, consumption, type]);
+  const result = useMemo<CalcResult | null>(() => {
+    const d = numbers.distance;
+    const fuelInput = numbers.fuel;
+    const p = numbers.price;
+    const c = numbers.consumption;
+
+    if (type === "trip" && d && p && c) {
+      const fuel = d / c;
+      return { fuel, cost: fuel * p, costPerKm: p / c };
+    }
+
+    if (type === "fuel" && d && c) {
+      const fuel = d / c;
+      return { fuel, cost: p ? fuel * p : undefined };
+    }
+
+    if (type === "distance" && fuelInput && c) {
+      const range = fuelInput * c;
+      return { distance: range, rangeCost: p ? fuelInput * p : undefined };
+    }
+
+    if (type === "consumption" && d && fuelInput) {
+      return { consumption: d / fuelInput };
+    }
+
+    return null;
+  }, [numbers, type]);
 
   if (!vehicle) return <MobileShell title="Calculator" back={() => nav({ to: "/more" })}><Card>No vehicle selected</Card></MobileShell>;
 
   const conf = {
-    trip: { fields: ["distance", "price", "consumption"], desc: "Estimate trip cost" },
-    distance: { fields: ["fuel", "consumption"], desc: "How far can you go" },
-    consumption: { fields: ["distance", "fuel"], desc: "Calculate consumption" },
-    fuel: { fields: ["distance", "consumption", "price"], desc: "Fuel needed for trip" },
+    trip: { fields: ["distance", "price", "consumption"], desc: "Estimate trip fuel and total cost." },
+    distance: { fields: ["fuel", "consumption", "price"], desc: "Estimate how far your available fuel can go." },
+    consumption: { fields: ["distance", "fuel"], desc: "Calculate mileage from distance and fuel used." },
+    fuel: { fields: ["distance", "consumption", "price"], desc: "Estimate required fuel for a route." },
   }[type];
+
+  const missing = missingFields(type, numbers);
 
   return (
     <MobileShell title="Calculator" back={() => nav({ to: "/more" })}>
@@ -96,8 +113,7 @@ function CalculatorPage() {
             sub="Fuel + money"
             onClick={() => {
               setType("trip");
-              setResult(null);
-            }}
+              }}
           />
           <ModeButton
             active={type === "fuel"}
@@ -106,8 +122,7 @@ function CalculatorPage() {
             sub="Litres needed"
             onClick={() => {
               setType("fuel");
-              setResult(null);
-            }}
+              }}
           />
           <ModeButton
             active={type === "distance"}
@@ -116,8 +131,7 @@ function CalculatorPage() {
             sub="Range from fuel"
             onClick={() => {
               setType("distance");
-              setResult(null);
-            }}
+              }}
           />
           <ModeButton
             active={type === "consumption"}
@@ -126,29 +140,38 @@ function CalculatorPage() {
             sub="km per litre"
             onClick={() => {
               setType("consumption");
-              setResult(null);
-            }}
+              }}
           />
         </div>
 
         <Card className="space-y-3">
+          <div>
+            <div className="text-sm font-semibold">{conf.desc}</div>
+            {defaults.consumption && (
+              <div className="text-xs text-muted-foreground mt-1">
+                Average consumption prefilled from your fuel logs.
+              </div>
+            )}
+          </div>
           {conf.fields.includes("distance") && (
-            <NumberField label={`Distance (${vehicle.distanceUnit})`} value={distance} onChange={setDistance} />
+            <NumberField label={`Distance (${vehicle.distanceUnit})`} value={distance} onChange={setDistance} placeholder="e.g. 120" />
           )}
           {conf.fields.includes("fuel") && (
-            <NumberField label={`Fuel (${vehicle.fuelUnit})`} value={fuelAmount} onChange={setFuelAmount} />
+            <NumberField label={`Fuel (${vehicle.fuelUnit})`} value={fuelAmount} onChange={setFuelAmount} placeholder="e.g. 5" />
           )}
           {conf.fields.includes("price") && (
-            <NumberField label={`Price/${vehicle.fuelUnit} (${vehicle.currency})`} value={price} onChange={setPrice} />
+            <NumberField label={`Price/${vehicle.fuelUnit} (${vehicle.currency})`} value={price} onChange={setPrice} placeholder="e.g. 140" />
           )}
           {conf.fields.includes("consumption") && (
-            <NumberField label={`Consumption (${vehicle.distanceUnit}/${vehicle.fuelUnit})`} value={consumption} onChange={setConsumption} />
+            <NumberField label={`Consumption (${vehicle.distanceUnit}/${vehicle.fuelUnit})`} value={consumption} onChange={setConsumption} placeholder="e.g. 38" />
           )}
         </Card>
 
-        <button onClick={calc} className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-semibold">
-          Calculate
-        </button>
+        {!result && (
+          <Card className="border border-dashed border-border text-sm text-muted-foreground">
+            Enter {missing.join(", ")} to see the result.
+          </Card>
+        )}
 
         {result && (
           <Card>
@@ -178,12 +201,60 @@ function CalculatorPage() {
                   <div className="text-2xl font-bold">{fmtNum(result.consumption, 2)} {vehicle.distanceUnit}/{vehicle.fuelUnit}</div>
                 </div>
               )}
+              {result.costPerKm !== undefined && (
+                <div>
+                  <div className="text-xs text-muted-foreground">Cost / {vehicle.distanceUnit}</div>
+                  <div className="text-2xl font-bold">{fmtMoney(result.costPerKm, vehicle.currency)}</div>
+                </div>
+              )}
+              {result.rangeCost !== undefined && (
+                <div>
+                  <div className="text-xs text-muted-foreground">Fuel value</div>
+                  <div className="text-2xl font-bold text-primary">{fmtMoney(result.rangeCost, vehicle.currency)}</div>
+                </div>
+              )}
             </div>
           </Card>
         )}
       </div>
     </MobileShell>
   );
+}
+
+function positiveNumber(value: string) {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function missingFields(type: CalcType, numbers: {
+  distance: number | null;
+  fuel: number | null;
+  price: number | null;
+  consumption: number | null;
+}) {
+  if (type === "trip") {
+    return [
+      !numbers.distance && "distance",
+      !numbers.consumption && "consumption",
+      !numbers.price && "price",
+    ].filter(Boolean) as string[];
+  }
+  if (type === "fuel") {
+    return [
+      !numbers.distance && "distance",
+      !numbers.consumption && "consumption",
+    ].filter(Boolean) as string[];
+  }
+  if (type === "distance") {
+    return [
+      !numbers.fuel && "fuel",
+      !numbers.consumption && "consumption",
+    ].filter(Boolean) as string[];
+  }
+  return [
+    !numbers.distance && "distance",
+    !numbers.fuel && "fuel",
+  ].filter(Boolean) as string[];
 }
 
 function ModeButton({
@@ -217,7 +288,17 @@ function ModeButton({
   );
 }
 
-function NumberField({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
+function NumberField({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) {
   return (
     <div>
       <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">{label}</div>
@@ -226,6 +307,7 @@ function NumberField({ label, value, onChange }: { label: string; value: string;
         inputMode="decimal"
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
         className="w-full bg-transparent border border-input rounded-xl px-3 py-2.5 text-sm font-medium outline-none focus:ring-2 focus:ring-ring"
       />
     </div>
