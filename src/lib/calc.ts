@@ -12,6 +12,24 @@ export function fillUpsForVehicle(all: FillUp[], vehicleId: string) {
   return sortByDate(all.filter((f) => f.vehicleId === vehicleId), true);
 }
 
+export function latestOdo(fillups: FillUp[], initialOdo = 0) {
+  return fillups.reduce((max, f) => Math.max(max, f.odo), initialOdo);
+}
+
+export function totalDistance(fillups: FillUp[], initialOdo = 0) {
+  const last = latestOdo(fillups, initialOdo);
+  return Math.max(0, last - initialOdo);
+}
+
+export function distanceRows(fillups: FillUp[], initialOdo = 0) {
+  let prevOdo = initialOdo;
+  return sortByDate(fillups, true).map((f) => {
+    const distance = Math.max(0, f.odo - prevOdo);
+    prevOdo = Math.max(prevOdo, f.odo);
+    return { ...f, distance };
+  });
+}
+
 /**
  * Compute consumption km/L for each fill-up using distance since previous full tank.
  */

@@ -10,13 +10,14 @@ import {
   fmtNum,
 } from "@/lib/calc";
 import {
+  Calculator,
   BarChart3,
   LineChart,
   MapPin,
   Plus,
   ChevronRight,
   Fuel,
-  Gauge,
+  Wrench,
   TrendingUp,
   Car,
   Bike,
@@ -89,10 +90,9 @@ function Home() {
       }
     >
       <div className="space-y-4">
-        {/* Vehicle selector */}
         <Link to="/more/vehicles">
-          <Card className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-2xl bg-primary-soft text-primary flex items-center justify-center">
+          <Card className="flex items-center gap-3 border border-border/70">
+            <div className="h-12 w-12 rounded-xl bg-primary-soft text-primary flex items-center justify-center shrink-0">
               <VIcon className="h-6 w-6" />
             </div>
             <div className="flex-1 min-w-0">
@@ -106,61 +106,61 @@ function Home() {
           </Card>
         </Link>
 
-        {/* Nearby stations preview */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link to="/fillups/add" className="rounded-2xl bg-primary p-4 text-primary-foreground shadow-card active:scale-[0.99] transition-transform">
+            <Plus className="h-6 w-6" />
+            <div className="mt-3 text-base font-bold">Add fill-up</div>
+            <div className="text-xs opacity-85">Log fuel now</div>
+          </Link>
+          <Link to="/more/calculator" className="rounded-2xl bg-card p-4 text-foreground shadow-card border border-border/70 active:scale-[0.99] transition-transform">
+            <Calculator className="h-6 w-6 text-primary" />
+            <div className="mt-3 text-base font-bold">Trip calculator</div>
+            <div className="text-xs text-muted-foreground">Cost and fuel</div>
+          </Link>
+        </div>
+
+        <Card className="border border-border/70">
+          <div className="flex items-center gap-2 mb-3">
+            <Fuel className="h-4 w-4 text-primary" />
+            <div className="font-semibold">Fuel summary</div>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <Stat label="Avg cons." value={<MileageValue value={avgConsumption} />} />
+            <Stat label="Last cons." value={<MileageValue value={last?.consumption ?? null} />} />
+            <Stat label="Last price" value={fmtMoney(last?.pricePerLitre ?? 0, vehicle.currency)} sub={`/${vehicle.fuelUnit}`} />
+          </div>
+        </Card>
+
+        <div className="grid grid-cols-4 gap-2">
+          <QuickLink to="/stats" icon={BarChart3} label="Stats" />
+          <QuickLink to="/costs" icon={Wrench} label="Costs" />
+          <QuickLink to="/fillups" icon={Fuel} label="Logs" />
+          <QuickLink to="/charts" icon={LineChart} label="Charts" />
+        </div>
+
         <Link to="/stations">
-          <Card>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-primary" />
-                <div className="font-semibold">Nearby petrol stations</div>
+          <Card className="border border-border/70">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <MapPin className="h-4 w-4 text-primary shrink-0" />
+                <div className="font-semibold truncate">Petrol stations</div>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
             </div>
-            <div className="space-y-2">
+            <div className="mt-3 space-y-2">
               {nearby.map((s) => (
                 <div key={s.id} className="flex items-center justify-between text-sm">
-                  <div>
-                    <div className="font-medium">{s.name}</div>
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{s.name}</div>
                     <div className="text-xs text-muted-foreground">{s.distanceKm} km away</div>
                   </div>
-                  <div className="text-primary font-semibold">{fmtMoney(s.latestPrice, vehicle.currency)}/L</div>
+                  <div className="text-primary font-semibold shrink-0">{fmtMoney(s.latestPrice, vehicle.currency)}/L</div>
                 </div>
               ))}
             </div>
           </Card>
         </Link>
 
-        {/* Fuel summary */}
-        <Card>
-          <div className="flex items-center gap-2 mb-3">
-            <Fuel className="h-4 w-4 text-primary" />
-            <div className="font-semibold">Fuel summary</div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <Stat
-              label="Avg cons."
-              value={<MileageValue value={avgConsumption} />}
-            />
-            <Stat
-              label="Last cons."
-              value={<MileageValue value={last?.consumption ?? null} />}
-            />
-            <Stat
-              label="Last price"
-              value={fmtMoney(last?.pricePerLitre ?? 0, vehicle.currency)}
-              sub={`/${vehicle.fuelUnit}`}
-            />
-          </div>
-        </Card>
-
-        {/* Quick links */}
-        <div className="grid grid-cols-3 gap-3">
-          <QuickLink to="/stats" icon={BarChart3} label="Stats" />
-          <QuickLink to="/charts" icon={LineChart} label="Charts" />
-          <QuickLink to="/fillups" icon={Fuel} label="Fill-ups" />
-        </div>
-
-        {/* Trends */}
         <div>
           <div className="flex items-center gap-2 mb-2 px-1">
             <TrendingUp className="h-4 w-4 text-primary" />
@@ -213,12 +213,12 @@ function QuickLink({
 }) {
   return (
     <Link to={to as any}>
-      <Card className="flex flex-col items-center justify-center gap-2 py-4">
-        <div className="h-10 w-10 rounded-xl bg-primary-soft text-primary flex items-center justify-center">
+      <div className="flex min-h-[82px] flex-col items-center justify-center gap-2 rounded-2xl bg-card px-2 py-3 text-center shadow-card border border-border/70 active:scale-[0.99] transition-transform">
+        <div className="h-9 w-9 rounded-xl bg-primary-soft text-primary flex items-center justify-center">
           <Icon className="h-5 w-5" />
         </div>
-        <div className="text-sm font-medium">{label}</div>
-      </Card>
+        <div className="text-xs font-semibold leading-tight">{label}</div>
+      </div>
     </Link>
   );
 }

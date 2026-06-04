@@ -49,7 +49,7 @@ function MorePage() {
     <MobileShell title="More">
       <div className="space-y-3">
         <Section>
-          <Row to="/more/calculator" icon={Calculator} label="Calculator" />
+          <Row to="/more/calculator" icon={Calculator} label="Trip cost & fuel calculator" />
           <Row to="/more/vehicles" icon={Car} label="Vehicles" />
           <Row to="/more/fueltypes" icon={Droplet} label="Fuel types" />
           <Row to="/stats" icon={SettingsIcon} label="Stats & Charts" />

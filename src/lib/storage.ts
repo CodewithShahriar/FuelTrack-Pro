@@ -9,6 +9,7 @@ const KEYS = {
   stations: "ft_stations",
   selectedVehicle: "ft_selected_vehicle",
   seeded: "ft_seeded_fuelio_2026_05_29",
+  defaultsUpdated: "ft_defaults_2026_06_04_v2",
 };
 
 function readJSON<T>(key: string, fallback: T): T {
@@ -35,6 +36,22 @@ export function ensureSeed() {
     writeJSON(KEYS.costs, seedCosts);
     writeJSON(KEYS.selectedVehicle, seedVehicles[0].id);
     localStorage.setItem(KEYS.seeded, "1");
+    return;
+  }
+
+  if (!localStorage.getItem(KEYS.defaultsUpdated)) {
+    const vehicles = readJSON<Vehicle[]>(KEYS.vehicles, []);
+    if (!vehicles.length) writeJSON(KEYS.vehicles, seedVehicles);
+    if (!readJSON<Station[]>(KEYS.stations, []).length) {
+      writeJSON(KEYS.stations, seedStations);
+    }
+    if (!readJSON<CostEntry[]>(KEYS.costs, []).length) {
+      writeJSON(KEYS.costs, seedCosts);
+    }
+    if (!localStorage.getItem(KEYS.selectedVehicle)) {
+      writeJSON(KEYS.selectedVehicle, vehicles[0]?.id ?? seedVehicles[0]?.id ?? "");
+    }
+    localStorage.setItem(KEYS.defaultsUpdated, "1");
   }
 }
 

@@ -1,12 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Fuel, Wrench, MapPin, MoreHorizontal } from "lucide-react";
+import { Home, Fuel, Wrench, PlusCircle, MoreHorizontal } from "lucide-react";
 
 type Tab = { to: string; label: string; icon: typeof Home; exact?: boolean };
 const tabs: Tab[] = [
   { to: "/", label: "Home", icon: Home, exact: true },
   { to: "/fillups", label: "Fill-ups", icon: Fuel },
+  { to: "/fillups/add", label: "Add", icon: PlusCircle },
   { to: "/costs", label: "Costs", icon: Wrench },
-  { to: "/stations", label: "Stations", icon: MapPin },
   { to: "/more", label: "More", icon: MoreHorizontal },
 ];
 

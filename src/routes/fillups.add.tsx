@@ -40,12 +40,37 @@ function AddFillUpPage() {
   const [time, setTime] = useState(now.toTimeString().slice(0, 5));
   const [fullTank, setFullTank] = useState(true);
   const [tankLevel, setTankLevel] = useState(false);
-  const [hasStation, setHasStation] = useState(true);
+  const [hasStation, setHasStation] = useState(stations.length > 0);
   const [stationId, setStationId] = useState(stations[0]?.id ?? "");
   const [favourite, setFavourite] = useState(false);
   const [notes, setNotes] = useState("");
   const [discount, setDiscount] = useState(false);
   const [missed, setMissed] = useState(false);
+
+  const lastFill = useMemo(() => {
+    if (!vehicle) return undefined;
+    return fillups
+      .filter((f) => f.vehicleId === vehicle.id)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0];
+  }, [fillups, vehicle]);
+
+  useEffect(() => {
+    setFuelType(lastFill?.fuelType ?? vehicle?.fuelType ?? "Octane");
+    setPrice(lastFill?.pricePerLitre ? String(lastFill.pricePerLitre) : "");
+    setOdo("");
+    setTrip("");
+    setTouchedTotal(false);
+    setTotal("");
+  }, [lastFill?.id, vehicle?.id]);
+
+  useEffect(() => {
+    if (!stations.length) {
+      setHasStation(false);
+      setStationId("");
+      return;
+    }
+    setStationId((current) => current || stations[0].id);
+  }, [stations]);
 
   // auto-calc total
   useEffect(() => {
@@ -62,7 +87,7 @@ function AddFillUpPage() {
     mode === "odo" ? parseFloat(odo) : lastOdo + (parseFloat(trip) || 0);
   const canSave =
     !isNaN(computedOdo) &&
-    computedOdo > 0 &&
+    computedOdo >= lastOdo &&
     parseFloat(litres) > 0 &&
     parseFloat(price) > 0 &&
     parseFloat(total) > 0;
@@ -146,7 +171,7 @@ function AddFillUpPage() {
               value={odo}
               onChange={setOdo}
               type="number"
-              placeholder={`${lastOdo}`}
+              placeholder={`${lastOdo + 1}`}
               required
             />
           ) : (
@@ -202,12 +227,21 @@ function AddFillUpPage() {
               <MileageValue value={consumption} className="text-xs" />
             </div>
           )}
+          {!canSave && (
+            <div className="text-xs text-muted-foreground">
+              Enter odometer, fuel amount, and price to save.
+            </div>
+          )}
         </Card>
 
         <Card className="space-y-1">
           <Toggle label="Full tank" value={fullTank} onChange={setFullTank} />
           <Toggle label="Tank level info" value={tankLevel} onChange={setTankLevel} />
-          <Toggle label="Petrol station" value={hasStation} onChange={setHasStation} />
+          <Toggle
+            label="Petrol station"
+            value={hasStation}
+            onChange={(value) => setHasStation(stations.length > 0 ? value : false)}
+          />
           {hasStation && (
             <div className="pt-2">
               <Label>Selected petrol station</Label>

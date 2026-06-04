@@ -54,6 +54,56 @@ export const seedFillUps: FillUp[] = [
   { id: "f_38", vehicleId: "v_apache", date: "2026-05-26T00:00:00.000Z", odo: 35066.3, litres: 9.05, pricePerLitre: 140, totalCost: 1267, fuelType: "Octane", fullTank: true },
 ];
 
-export const seedStations: Station[] = [];
+export const seedStations: Station[] = [
+  {
+    id: "s_bashundhara",
+    name: "Bashundhara Octane Point",
+    distanceKm: 1.8,
+    latestPrice: 140,
+    tags: ["octane", "card"],
+    favourite: true,
+  },
+  {
+    id: "s_police_plaza",
+    name: "Police Plaza Fuel Station",
+    distanceKm: 3.4,
+    latestPrice: 140,
+    tags: ["24/7", "wash"],
+  },
+  {
+    id: "s_mohakhali",
+    name: "Mohakhali Filling Station",
+    distanceKm: 5.6,
+    latestPrice: 139,
+    tags: ["service"],
+  },
+];
 
-export const seedCosts: CostEntry[] = [];
+export const seedCosts: CostEntry[] = [
+  {
+    id: "c_1",
+    vehicleId: "v_apache",
+    date: "2026-01-12T00:00:00.000Z",
+    type: "service",
+    amount: 1850,
+    odo: 32540,
+    note: "Engine oil and chain service",
+  },
+  {
+    id: "c_2",
+    vehicleId: "v_apache",
+    date: "2026-03-08T00:00:00.000Z",
+    type: "parking",
+    amount: 180,
+    note: "Monthly parking",
+  },
+  {
+    id: "c_3",
+    vehicleId: "v_apache",
+    date: "2026-05-20T00:00:00.000Z",
+    type: "repair",
+    amount: 650,
+    odo: 34890,
+    note: "Brake adjustment",
+  },
+];

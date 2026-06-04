@@ -5,14 +5,16 @@ import { MileageValue } from "@/components/MileageValue";
 import { useCosts, useFillUps, useSelectedVehicle } from "@/lib/storage";
 import {
   costsForVehicle,
+  distanceRows,
   fillUpsForVehicle,
   fmtMoney,
   fmtNum,
   inRange,
   ranges,
+  totalDistance as getTotalDistance,
   withConsumption,
 } from "@/lib/calc";
-import { LineChart as LineIcon } from "lucide-react";
+import { Fuel, LineChart as LineIcon, Route as RouteIcon, Wallet } from "lucide-react";
 
 export const Route = createFileRoute("/stats")({
   head: () => ({ meta: [{ title: "Stats — FuelTrack Pro" }] }),
@@ -43,24 +45,42 @@ function StatsPage() {
         </Link>
       }
     >
-      <div className="flex bg-muted rounded-xl p-1 mb-4">
-        {(["fillups", "costs", "distance"] as Tab[]).map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition ${
-              tab === t ? "bg-card text-foreground shadow-soft" : "text-muted-foreground"
-            }`}
-          >
-            {t === "fillups" ? "Fill-ups" : t}
-          </button>
-        ))}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <TabButton active={tab === "fillups"} icon={Fuel} label="Fill-ups" onClick={() => setTab("fillups")} />
+        <TabButton active={tab === "costs"} icon={Wallet} label="Costs" onClick={() => setTab("costs")} />
+        <TabButton active={tab === "distance"} icon={RouteIcon} label="Distance" onClick={() => setTab("distance")} />
       </div>
 
       {tab === "fillups" && <FillUpsStats computed={computed} vehicle={vehicle} />}
       {tab === "costs" && <CostsStats fillups={computed} costs={myCosts} vehicle={vehicle} />}
       {tab === "distance" && <DistanceStats computed={computed} vehicle={vehicle} />}
     </MobileShell>
+  );
+}
+
+function TabButton({
+  active,
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  icon: any;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`min-h-[68px] rounded-2xl border px-2 py-3 text-center shadow-card transition ${
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border/70 bg-card text-foreground"
+      }`}
+    >
+      <Icon className={`mx-auto h-5 w-5 ${active ? "" : "text-primary"}`} />
+      <div className="mt-1 text-xs font-bold leading-tight">{label}</div>
+    </button>
   );
 }
 
@@ -130,8 +150,7 @@ function CostsStats({ fillups, costs, vehicle }: any) {
   const inP = (from: Date, to: Date) => all.filter((x) => inRange(x.date, from, to));
   const bills = fillups.map((f: any) => f.totalCost);
   const prices = fillups.map((f: any) => f.pricePerLitre);
-  const distances = fillups.map((f: any) => f.distance).filter((x: any) => x > 0);
-  const totalDistance = distances.reduce((a: number, b: number) => a + b, 0);
+  const totalDistance = getTotalDistance(fillups, vehicle.initialOdo);
   const totalCost = sum(all);
 
   const firstDate = all.length ? Math.min(...all.map((x) => new Date(x.date).getTime())) : Date.now();
@@ -170,7 +189,7 @@ function CostsStats({ fillups, costs, vehicle }: any) {
 
 function DistanceStats({ computed, vehicle }: any) {
   const r = ranges();
-  const distances = computed.map((c: any) => ({ date: c.date, d: c.distance || 0 }));
+  const distances = distanceRows(computed, vehicle.initialOdo).map((c: any) => ({ date: c.date, d: c.distance || 0 }));
   const inP = (from: Date, to: Date) =>
     distances.filter((x: any) => inRange(x.date, from, to)).reduce((a: number, b: any) => a + b.d, 0);
   const totalDistance = distances.reduce((a: number, b: any) => a + b.d, 0);

@@ -1,8 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MobileShell, Card } from "@/components/MobileShell";
-import { useSelectedVehicle } from "@/lib/storage";
-import { fmtMoney, fmtNum } from "@/lib/calc";
+import { useFillUps, useSelectedVehicle } from "@/lib/storage";
+import { fillUpsForVehicle, fmtMoney, fmtNum, withConsumption } from "@/lib/calc";
+import { Calculator, Fuel, Gauge, Route as RouteIcon } from "lucide-react";
 
 export const Route = createFileRoute("/more/calculator")({
   head: () => ({ meta: [{ title: "Calculator — FuelTrack Pro" }] }),
@@ -13,39 +14,62 @@ type CalcType = "trip" | "distance" | "consumption" | "fuel";
 
 function CalculatorPage() {
   const { vehicle, vehicles, setId } = useSelectedVehicle();
+  const [fillups] = useFillUps();
   const nav = useNavigate();
   const [type, setType] = useState<CalcType>("trip");
   const [distance, setDistance] = useState("");
+  const [fuelAmount, setFuelAmount] = useState("");
   const [price, setPrice] = useState("");
   const [consumption, setConsumption] = useState("");
   const [result, setResult] = useState<null | { cost?: number; fuel?: number; distance?: number; consumption?: number }>(null);
 
-  if (!vehicle) return <MobileShell title="Calculator" back={() => nav({ to: "/more" })}><Card>No vehicle selected</Card></MobileShell>;
+  const defaults = useMemo(() => {
+    if (!vehicle) return { consumption: "", price: "" };
+    const mine = withConsumption(fillUpsForVehicle(fillups, vehicle.id));
+    const last = mine[mine.length - 1];
+    const values = mine.map((f) => f.consumption).filter((v): v is number => !!v);
+    const avg = values.length
+      ? values.reduce((sum, value) => sum + value, 0) / values.length
+      : null;
+    return {
+      consumption: avg ? avg.toFixed(2) : "",
+      price: last?.pricePerLitre ? String(last.pricePerLitre) : "",
+    };
+  }, [fillups, vehicle]);
+
+  useEffect(() => {
+    setConsumption(defaults.consumption);
+    setPrice(defaults.price);
+    setResult(null);
+  }, [defaults.consumption, defaults.price, vehicle?.id]);
 
   function calc() {
     const d = parseFloat(distance);
+    const fuelInput = parseFloat(fuelAmount);
     const p = parseFloat(price);
     const c = parseFloat(consumption);
     if (type === "trip") {
-      if (!d || !p || !c) return;
+      if (d <= 0 || p <= 0 || c <= 0) return setResult(null);
       const fuel = d / c;
       setResult({ fuel, cost: fuel * p });
     } else if (type === "distance") {
-      // distance = fuel * consumption -> need fuel (litres) typed in `distance` field actually:
-      // simpler: distance = litres * consumption, ask for litres reusing distance field as litres
-      if (!d || !c) return;
-      setResult({ distance: d * c });
+      if (fuelInput <= 0 || c <= 0) return setResult(null);
+      setResult({ distance: fuelInput * c });
     } else if (type === "consumption") {
-      if (!d) return;
-      const litres = parseFloat(price); // reuse price field as litres
-      if (!litres) return;
-      setResult({ consumption: d / litres });
+      if (d <= 0 || fuelInput <= 0) return setResult(null);
+      setResult({ consumption: d / fuelInput });
     } else {
-      if (!d || !c) return;
+      if (d <= 0 || c <= 0) return setResult(null);
       const fuel = d / c;
-      setResult({ fuel, cost: parseFloat(price) ? fuel * parseFloat(price) : undefined });
+      setResult({ fuel, cost: p ? fuel * p : undefined });
     }
   }
+
+  useEffect(() => {
+    calc();
+  }, [distance, fuelAmount, price, consumption, type]);
+
+  if (!vehicle) return <MobileShell title="Calculator" back={() => nav({ to: "/more" })}><Card>No vehicle selected</Card></MobileShell>;
 
   const conf = {
     trip: { fields: ["distance", "price", "consumption"], desc: "Estimate trip cost" },
@@ -64,23 +88,55 @@ function CalculatorPage() {
           </select>
         </Card>
 
-        <Card>
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Calculator type</div>
-          <select value={type} onChange={(e) => { setType(e.target.value as CalcType); setResult(null); }} className="w-full bg-transparent font-semibold outline-none">
-            <option value="trip">Trip cost</option>
-            <option value="distance">Distance</option>
-            <option value="consumption">Consumption</option>
-            <option value="fuel">Required fuel</option>
-          </select>
-          <div className="text-xs text-muted-foreground mt-1">{conf.desc}</div>
-        </Card>
+        <div className="grid grid-cols-2 gap-2">
+          <ModeButton
+            active={type === "trip"}
+            icon={Calculator}
+            label="Trip cost"
+            sub="Fuel + money"
+            onClick={() => {
+              setType("trip");
+              setResult(null);
+            }}
+          />
+          <ModeButton
+            active={type === "fuel"}
+            icon={Fuel}
+            label="Required fuel"
+            sub="Litres needed"
+            onClick={() => {
+              setType("fuel");
+              setResult(null);
+            }}
+          />
+          <ModeButton
+            active={type === "distance"}
+            icon={RouteIcon}
+            label="Distance"
+            sub="Range from fuel"
+            onClick={() => {
+              setType("distance");
+              setResult(null);
+            }}
+          />
+          <ModeButton
+            active={type === "consumption"}
+            icon={Gauge}
+            label="Consumption"
+            sub="km per litre"
+            onClick={() => {
+              setType("consumption");
+              setResult(null);
+            }}
+          />
+        </div>
 
         <Card className="space-y-3">
           {conf.fields.includes("distance") && (
             <NumberField label={`Distance (${vehicle.distanceUnit})`} value={distance} onChange={setDistance} />
           )}
           {conf.fields.includes("fuel") && (
-            <NumberField label={`Fuel (${vehicle.fuelUnit})`} value={type === "consumption" ? price : distance} onChange={type === "consumption" ? setPrice : setDistance} />
+            <NumberField label={`Fuel (${vehicle.fuelUnit})`} value={fuelAmount} onChange={setFuelAmount} />
           )}
           {conf.fields.includes("price") && (
             <NumberField label={`Price/${vehicle.fuelUnit} (${vehicle.currency})`} value={price} onChange={setPrice} />
@@ -127,6 +183,37 @@ function CalculatorPage() {
         )}
       </div>
     </MobileShell>
+  );
+}
+
+function ModeButton({
+  active,
+  icon: Icon,
+  label,
+  sub,
+  onClick,
+}: {
+  active: boolean;
+  icon: any;
+  label: string;
+  sub: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`min-h-[88px] rounded-2xl border p-3 text-left shadow-card transition ${
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-border/70 bg-card text-foreground"
+      }`}
+    >
+      <Icon className={`h-5 w-5 ${active ? "" : "text-primary"}`} />
+      <div className="mt-2 text-sm font-bold leading-tight">{label}</div>
+      <div className={`text-xs ${active ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+        {sub}
+      </div>
+    </button>
   );
 }
 
